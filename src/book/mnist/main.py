@@ -15,7 +15,9 @@ W = tf.Variable(tf.zeros([784, 10]))
 b = tf.Variable(tf.zeros([10]))
 
 # 判断图片->数字的概率
-y = tf.nn.softmax(tf.matmul(x, W) + b)
+y = tf.nn.softmax(tf.matmul(x, W) + b)  # 0.9085
+# 这里不应该是操作符重载么? 为啥会对结果有影响?
+# y = tf.nn.softmax(tf.add(tf.matmul(x, W), b)) # 0.9136 
 
 # 定义损失函数, 交叉熵 cross-entropy
 y_ = tf.placeholder("float", [None, 10])
