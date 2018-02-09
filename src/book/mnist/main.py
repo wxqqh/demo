@@ -17,7 +17,9 @@ b = tf.Variable(tf.zeros([10]))
 # 判断图片->数字的概率
 y = tf.nn.softmax(tf.matmul(x, W) + b)  # 0.9085
 # 这里不应该是操作符重载么? 为啥会对结果有影响?
-# y = tf.nn.softmax(tf.add(tf.matmul(x, W), b)) # 0.9136 
+# y = tf.nn.softmax(tf.add(tf.matmul(x, W), b)) # 0.9136
+# 黑人问号???
+# y = tf.nn.softmax(tf.matmul(x, W))  # 0.9172
 
 # 定义损失函数, 交叉熵 cross-entropy
 y_ = tf.placeholder("float", [None, 10])
@@ -50,6 +52,5 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
 print(sess.run(accuracy, feed_dict={
       x: mnist.test.images, y_: mnist.test.labels}))
-
 
 sess.close()
