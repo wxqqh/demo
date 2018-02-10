@@ -80,10 +80,13 @@ for i in range(20000):
     if i % 100 == 0:
         train_accuracy = sess.run(accuracy, feed_dict={
             x: batch[0], y_: batch[1], keep_prob: 1.0})
-        print("step %d, training accuracy %g", (i, train_accuracy))
+        print("step %d, training accuracy %g" % (i, train_accuracy))
     sess.run(train_step, feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
 
-print("test accuracy %g", sess.run(accuracy, feed_dict={
-    x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+# 验证集也进行切分
+for i in range(20):
+    test_set = mnist.test.next_batch(50)
+    print("test accuracy %g" % sess.run(accuracy, feed_dict={
+        x: test_set[0], y_: test_set[1], keep_prob: 1.0}))
 
 sess.close()
