@@ -30,5 +30,5 @@
 		}
 	},
 	"python.linting.flake8Enabled": true,
-	"python.pythonPath": "D:\\ProgramData\\Anaconda3\\envs\\tensorflow\\python.exe"
+	"python.pythonPath": "D:\\ProgramData\\Anaconda3\\python.exe"
 }
