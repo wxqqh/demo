@@ -4,31 +4,35 @@ from numpy.random import RandomState
 # 定义训练数据batch大小
 batch_saze = 8
 # 定义神经网络的参数,
-w1 = tf.Variable(tf.random_normal(
-    [2, 3], stddev=1,  seed=1), name="w1")
-w2 = tf.Variable(tf.random_normal(
-    [3, 1], stddev=1,  seed=1), name="w2")
+with tf.name_scope("Weight"):
+    w1 = tf.Variable(tf.random_normal(
+        [2, 3], stddev=1,  seed=1), name="w1")
+    w2 = tf.Variable(tf.random_normal(
+        [3, 1], stddev=1,  seed=1), name="w2")
 
 # 在shape的一个维度上使用None可以方便使用不同的batch大小
 # 在训练时需要把数据分成较小的batch, 但是在测试时候, 可以一次性使用全部的数据
 # 当数据集比较小的时候方便测试, 但是若相反, 把大量的数据放入一个batch中可能会导致内存溢出
-
-x = tf.placeholder(tf.float32, [None, 2], name="x-input")
-y_ = tf.placeholder(tf.float32, [None, 1], name="y-input")
+with tf.name_scope("Input"):
+    x = tf.placeholder(tf.float32, [None, 2], name="x-input")
+    y_ = tf.placeholder(tf.float32, [None, 1], name="y-input")
 
 # 定义神经网络传播过程
-
-a = tf.matmul(x, w1, name="hidden-layer")
-y = tf.matmul(a, w2, name="output-layer")
+with tf.name_scope("Hidden-Layer"):
+    a = tf.matmul(x, w1, name="hidden-layer")
+with tf.name_scope("Output-Layer"):
+    y = tf.matmul(a, w2, name="output-layer")
 
 # 定义损失函数和反向传播的算法
-y1 = tf.sigmoid(y)
-cross_entropy = -tf.reduce_mean(
-    y_ * tf.log(tf.clip_by_value(y1, 1e-10, 1.0))
-    + (1-y1) * tf.log(tf.clip_by_value(1-y1, 1e-10, 1.0))
-)
+with tf.name_scope("Loss-FN"):
+    y1 = tf.sigmoid(y)
+    cross_entropy = -tf.reduce_mean(
+        y_ * tf.log(tf.clip_by_value(y1, 1e-10, 1.0))
+        + (1-y1) * tf.log(tf.clip_by_value(1-y1, 1e-10, 1.0))
+    )
 
-train_step = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
+with tf.name_scope("Train"):
+    train_step = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
 
 # 通过随机数生成一个模拟的数据集
 rdm = RandomState()
