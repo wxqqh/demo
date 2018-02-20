@@ -65,22 +65,39 @@ with tf.Session(
     print("w1 : ", sess.run(w1), "  w2:  ", sess.run(w2))
     STEPS = 25000
     print("------ start train-----")
+
+    # 声明tensorboard log的输出对象
+    writer = tf.summary.FileWriter("./log", graph=tf.get_default_graph())
+
     for i in range(STEPS):
         # 每次选取batch_size个样本进行训练
         start = (i * batch_saze) % dataset_size
-        end = min(start+batch_saze, dataset_size)
-        # 通过选取的样本训练神经网络并且更新参数
-        sess.run(train_step, feed_dict={
-            x: X[start:end],
-            y_: Y[start:end]
-        })
+        end = min(start + batch_saze, dataset_size)
+
         if i % 1000 == 0:
+            # 配置运行时需要记录的信息
+            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            # 运行时记录信息的proto
+            run_metadata = tf.RunMetadata()
+            # 通过选取的样本训练神经网络并且更新参数
+            # 将配置信息和记录运行信息的proto传入运行的过程, 从而记录运行时的每一个节点的时间和空间开销的信息
+            sess.run(train_step, feed_dict={
+                x: X[start:end],
+                y_: Y[start:end]
+            }, options=run_options, run_metadata=run_metadata)
+
+            writer.add_run_metadata(run_metadata, "step %03d" % i)
+
             total_coress_entropy = sess.run(
                 cross_entropy, feed_dict={x: X, y_: Y})
             print("after train step: %f, cross_entropy is: %f" %
                   (i, total_coress_entropy))
             print("w1 : ", sess.run(w1), "  w2:  ", sess.run(w2))
+        else:
+            sess.run(train_step, feed_dict={
+                x: X[start:end],
+                y_: Y[start:end]
+            })
     print("------ end train-----")
     saver.save(sess, "./model/train")
-    writer = tf.summary.FileWriter("./log", graph=tf.get_default_graph())
     writer.close()
