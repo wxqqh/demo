@@ -1,14 +1,26 @@
 import tensorflow as tf
 from numpy.random import RandomState
 
+
+def add_summary(tensor, name):
+    with tf.name_scope("summaries"):
+        tf.summary.histogram(name, tensor)
+        mean = tf.reduce_mean(tensor)
+        tf.summary.scalar("mean/" + name, mean)
+        stddev = tf.sqrt(tf.reduce_mean(tf.square(tensor - mean)))
+        tf.summary.scalar("stddev/" + name, stddev)
+
+
 # 定义训练数据batch大小
 batch_saze = 8
 # 定义神经网络的参数,
 with tf.name_scope("Weight"):
     w1 = tf.Variable(tf.random_normal(
         [2, 3], stddev=1,  seed=1), name="w1")
+    add_summary(w1, w1.name)
     w2 = tf.Variable(tf.random_normal(
         [3, 1], stddev=1,  seed=1), name="w2")
+    add_summary(w2, w2.name)
 
 # 在shape的一个维度上使用None可以方便使用不同的batch大小
 # 在训练时需要把数据分成较小的batch, 但是在测试时候, 可以一次性使用全部的数据
@@ -20,8 +32,10 @@ with tf.name_scope("Input"):
 # 定义神经网络传播过程
 with tf.name_scope("Hidden-Layer"):
     a = tf.matmul(x, w1, name="hidden-layer")
+    add_summary(a, a.name)
 with tf.name_scope("Output-Layer"):
     y = tf.matmul(a, w2, name="output-layer")
+    add_summary(y, y.name)
 
 # 定义损失函数和反向传播的算法
 with tf.name_scope("Loss-FN"):
@@ -30,9 +44,13 @@ with tf.name_scope("Loss-FN"):
         y_ * tf.log(tf.clip_by_value(y1, 1e-10, 1.0))
         + (1-y1) * tf.log(tf.clip_by_value(1-y1, 1e-10, 1.0))
     )
+    tf.summary.scalar("cross_entropy", cross_entropy)
 
 with tf.name_scope("Train"):
     train_step = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
+
+# 合并所有的信息收集
+merged = tf.summary.merge_all()
 
 # 通过随机数生成一个模拟的数据集
 rdm = RandomState()
@@ -81,23 +99,27 @@ with tf.Session(
             run_metadata = tf.RunMetadata()
             # 通过选取的样本训练神经网络并且更新参数
             # 将配置信息和记录运行信息的proto传入运行的过程, 从而记录运行时的每一个节点的时间和空间开销的信息
-            sess.run(train_step, feed_dict={
+            summary, _ = sess.run([merged, train_step], feed_dict={
                 x: X[start:end],
                 y_: Y[start:end]
             }, options=run_options, run_metadata=run_metadata)
 
-            writer.add_run_metadata(run_metadata, "step %03d" % i)
-
             total_coress_entropy = sess.run(
                 cross_entropy, feed_dict={x: X, y_: Y})
+            # tf.summary.scalar("total_coress_entropy", total_coress_entropy)
+
+            writer.add_summary(summary, i)
+            writer.add_run_metadata(run_metadata, "S_%d" % i)
+
             print("after train step: %f, cross_entropy is: %f" %
                   (i, total_coress_entropy))
             print("w1 : ", sess.run(w1), "  w2:  ", sess.run(w2))
         else:
-            sess.run(train_step, feed_dict={
+            summary, _ = sess.run([merged, train_step], feed_dict={
                 x: X[start:end],
                 y_: Y[start:end]
             })
+            writer.add_summary(summary, i)
     print("------ end train-----")
     saver.save(sess, "./model/train")
     writer.close()
