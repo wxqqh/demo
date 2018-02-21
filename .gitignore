@@ -13,6 +13,9 @@ typings/
 # 构建最终目录也不需要
 dist/
 bin/
+log/
+model/
+Model/
 
 # 代码覆盖报告目录 也不需要
 coverage/
